@@ -13,7 +13,7 @@ from pyramid.threadlocal import get_current_request
 import deform
 import colander
 from saexttype import ChoiceType
-from sqlalchemy import Column, Boolean
+from sqlalchemy import Column, Boolean, Enum
 from pkg_resources import resource_filename
 from sacrud.common import columns_by_group, get_relationship
 from colanderalchemy import SQLAlchemySchemaNode
@@ -175,6 +175,21 @@ class SacrudForm(object):
                     widget=deform.widget.SelectWidget(
                         values=column.type.choices,
                     ),
+                )
+                new_column_list.append(field)
+            elif is_columntype(column, Enum):
+                field = colander.SchemaNode(
+                    colander.String(),
+                    title=get_column_param(column, 'title', self.translate),
+                    description=get_column_param(column, 'description',
+                                                 self.translate),
+                    name=column.key,
+                    missing=None,
+                    widget=deform.widget.SelectWidget(
+                        values=zip(column.type.enums,
+                                   column.type.enums)
+                    ),
+                    validator=colander.OneOf(column.type.enums)
                 )
                 new_column_list.append(field)
             elif is_columntype(column, (JSON, JSONB, HSTORE)):
